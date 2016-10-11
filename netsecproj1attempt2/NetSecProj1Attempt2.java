@@ -16,11 +16,11 @@ public class NetSecProj1Attempt2 {
             System.out.println();
             switch(t) {
                 case 1:
-                    d.publicKeyClient("localhost", 8080);
+                    d.diffieClient("localhost", 8080);
                     break;
                 case 2:
                     System.out.println("Calculating your public key ...");
-                    d.publicKeyServer(8080);
+                    d.diffieServer(8080);
                     break;
                 case 3:
                     System.exit(0);
@@ -29,7 +29,7 @@ public class NetSecProj1Attempt2 {
         } while ((t != 1) && (t != 2));
         
         
-        System.out.printf("Your public key:\t%d =||= 0x%X\n", d.getMyPublicKey(), d.getMyPublicKey());
-        System.out.printf("Your private key:\t%d =||= 0X%x\n", d.getPrivateKey(), d.getPrivateKey());
+        System.out.print("\nYour public key:\t" + d.getMyPublicKey() + "\n");
+        System.out.printf("Your shared key:\t%d =||= 0X%x\n", d.getPrivateKey(), d.getPrivateKey());
     }
 }

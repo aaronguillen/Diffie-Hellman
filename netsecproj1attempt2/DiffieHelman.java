@@ -17,20 +17,18 @@ public class DiffieHelman {
     private long p; //A large prime number
     private long a; //This is a primitive root mod p
     private long x; //Secret number 1 <= x <= (p - 2)
-    private long k; //The private key
-    private long o; //The other party's public key
+    private long o; //The shared key
             
     public DiffieHelman () { //Set small numbers that won't really work. They should be changed.
         p = 7;
         a = 3;
         x = 5;
-        k = -1;
         o = -1;
     }
     
     /**
-     * Would not recommend supplying this method with a value over 18 bits in
-     * length.
+     * Would not recommend supplying this method with a value over 32 bits in
+     * length. Less depending on your processing power.
      * 
      * @param prim A prime number, this method assumes you will provide it with
      * a number that is prime or at least probably prime
@@ -46,13 +44,18 @@ public class DiffieHelman {
         //that is, we we need to know the prime factors of s
         //Yes, this is a process and why this method should not be given too
         //large a number
+        double percDone = -5;
         ArrayList<Long> primeFactors = new ArrayList<>();
         for (long i = 2; i <= (s / 2); i ++) {
            if ((s % i == 0) && new BigInteger(Long.valueOf(i).toString()).isProbablePrime(10)) {
                primeFactors.add(i);
            }
-           System.out.println((((double)i / (s / 2)) * 100) + "% complete");
+           if ((((double)i / (s / 2)) * 100) >= (percDone + 5)) {
+               percDone = (((double)i / (s / 2)) * 100);
+               System.out.println(percDone + "% complete");
+           }
         }
+        System.out.println("Complete.");
         
         //Now, we have all the (probably) prime factors of s. We divide s by its
         //prime factors and remember those numbers
@@ -120,46 +123,6 @@ public class DiffieHelman {
         return BigInteger.probablePrime(bitLength, new SecureRandom()).longValue();
     }
     
-    private boolean millerRabin (long n) {
-        //The Miller-Rabin Primality Test
-        
-        //n must be greater than 1
-        if (!(n > 1)) {
-            return false;
-        }
-        long k = 0;
-        long m = n - 1;
-        long b;
-        long a;
-        
-        //Find 2^k * d = n - 1 = m
-        while (m % 2 != 1) {
-            m = m / 2;
-            k++;
-        }
-        a = 2;
-        while (a < (n - 1)) {
-            b = (long)Math.pow(a, m) % n;
-            if ((b == 1 % n) ||( b == -1 % n)) {
-                //n is probably prime
-                return true;
-            }
-            for (int i = 1; i < (k - 1); i++) {
-                b = (long)Math.pow(b, 2) % n;
-                if (b == 1 % n) {
-                    //n is composite
-                    return false;
-                }
-                if (b == -1 % n) {
-                    //n is probably prime
-                    return true;
-                }
-            }
-            a++;
-        }
-        return false;
-    }
-    
     //computeX() with a parameter, they sent us an x they want to use.
     public void computeX (long x) {
         /* x must be a number such that 1 <= x <= (p - 2)
@@ -190,7 +153,7 @@ public class DiffieHelman {
     
     //computeP() without parameter, we generate p
     public void computeP () {
-        this.p = primeMaker(18);
+        this.p = primeMaker(32);
     }
       
     //computeA() with a parameter, they sent us an a they want to use.
@@ -203,16 +166,11 @@ public class DiffieHelman {
         this.a = primitiveRoot(p);
     }
     
-    public long getMyPublicKey () {
-        return ((long)Math.pow(a, x) % p);
+    public String getMyPublicKey () {
+        return "Prime " + p + " and primitive root " + a;
     }
     
-    public byte[] getMyPublicKeyBytes () {
-        //Stole this idea from StackOverflow.com from user Waldheinz
-        return ByteBuffer.allocate(8).putLong(getMyPublicKey()).array();
-    }
-    
-    public void publicKeyServer(int port) {
+    public void diffieServer(int port) {
         /*
         //Put our public key in a text file
         Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("output.txt"), "utf-8"));
@@ -282,7 +240,7 @@ public class DiffieHelman {
             System.exit(-1);
         }
         
-        System.out.printf("BufferedReader read: %s\n\n", clientInput);
+        System.out.printf("BufferedReader read: %s\n", clientInput);
         
         o = expSqu(Long.valueOf(clientInput).longValue(), x, p);
         
@@ -301,7 +259,7 @@ public class DiffieHelman {
         }
     }
     
-    public void publicKeyClient(String ip, int port) {
+    public void diffieClient(String ip, int port) {
         if ((port < 0) || (port > 0xFFFF)) {
             port = 8080;
         }
