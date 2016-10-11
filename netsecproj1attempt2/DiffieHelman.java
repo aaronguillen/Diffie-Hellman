@@ -223,6 +223,10 @@ public class DiffieHelman {
             port = 8080;
         }
         
+        computeP();
+        computeA();
+        computeX();
+        
         ServerSocket Server = null;
         
         try {
@@ -263,20 +267,14 @@ public class DiffieHelman {
 
         System.out.println("BufferedReader and PrintWriter established.");
         
-        //Print public key in bytes
-        //System.out.print("PrintWriter writing: [");
-        //byte[] pubKey = getMyPublicKeyBytes();
-        //for (byte item : pubKey) {
-        //    System.out.print(item + " ");
-        //}
-        //System.out.println("]");
-        long pubKey = getMyPublicKey();
-        System.out.println("PrintWriter writing: " + pubKey);
-        //outToClient.println(pubKey);
-        outToClient.println(pubKey);
+        System.out.println("PrintWriter writing: " + p);
+        outToClient.println(p);
+        
+        System.out.println("PrintWriter writing: " + a);
+        outToClient.println(a);
         
         try {
-        clientInput = inFromClient.readLine();
+            clientInput = inFromClient.readLine();
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -284,14 +282,14 @@ public class DiffieHelman {
             System.exit(-1);
         }
         
-        //RIGHT HERE IS WHERE THE PROBLEMS BEGIN.
-        
         System.out.printf("BufferedReader read: %s\n\n", clientInput);
         
-        //System.out.println(Math.pow(Long.valueOf(clientInput).longValue(), x));
-        //o = (long)(Math.pow(Long.valueOf(clientInput).longValue(), x) % p);
-        
         o = expSqu(Long.valueOf(clientInput).longValue(), x, p);
+        
+        long send = expSqu(a, x, p);
+        
+        System.out.println("PrintWriter writing: " + send);
+        outToClient.println(send);
         
         try {
             Server.close();
@@ -338,10 +336,34 @@ public class DiffieHelman {
         
         System.out.println("BufferedReader established");
         
-        long pubKey = getMyPublicKey();
         try {
-            //socket.getOutputStream().write(pubKey);
-            new PrintWriter(socket.getOutputStream(), true).println(pubKey);
+            p = Long.valueOf(incoming.readLine()).longValue();
+        }
+        catch (IOException e) {
+            System.err.println("Unable to read from socket");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        
+        System.out.println("Read from socket: " + p);
+        
+        computeX();
+        
+        try {
+            a = Long.valueOf(incoming.readLine()).longValue();
+        }
+        catch (IOException e) {
+            System.err.println("Unable to read from socket");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        
+        System.out.println("Read from socket: " + a);
+        
+        long send = expSqu(a, x, p);
+        
+        try {
+            new PrintWriter(socket.getOutputStream(), true).println(send);
         }
         catch (IOException e) {
             System.err.println("Unable to write to socket");
@@ -349,7 +371,7 @@ public class DiffieHelman {
             System.exit(-1);
         }        
         
-        System.out.println("Write successful. Wrote: " + pubKey);
+        System.out.println("Write successful. Wrote: " + send);
         
         String lineIn = null;
         try {
@@ -361,9 +383,9 @@ public class DiffieHelman {
             System.exit(-1);
         }
         
+        System.out.println("Read from socket: " + lineIn);
         long fromServer = Long.valueOf(lineIn).longValue();
         
-        System.out.println("Read from socket: " + fromServer);
         
         o = expSqu(Long.valueOf(fromServer).longValue(), x, p);
         

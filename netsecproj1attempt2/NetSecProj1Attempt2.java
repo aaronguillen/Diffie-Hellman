@@ -10,8 +10,6 @@ public class NetSecProj1Attempt2 {
         int t; 
         DiffieHelman d = new DiffieHelman();
         
-        
-        
         do {
             System.out.print("Enter\n1:\tTo be Client\n2:\tTo be Server\n3:\tExit\n::->  ");
             t = input.nextInt();
@@ -22,8 +20,6 @@ public class NetSecProj1Attempt2 {
                     break;
                 case 2:
                     System.out.println("Calculating your public key ...");
-                    d.computeP();
-                    d.computeA();
                     d.publicKeyServer(8080);
                     break;
                 case 3:
